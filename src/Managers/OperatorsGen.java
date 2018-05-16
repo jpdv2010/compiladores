@@ -3,31 +3,26 @@ package Managers;
 import Java.Entitys.Token;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by joaop on 10/04/2018.
  */
 public class OperatorsGen {
-    private List<Token> operators = new ArrayList<>();
+    private List<Token> operators = Arrays.asList(
+            new Token("+"),
+            new Token("-"),
+            new Token("*"),
+            new Token("/"),
+            new Token(">"),
+            new Token("<"),
+            new Token("<="),
+            new Token(">="),
+            new Token("&")
+    );
 
     public OperatorsGen() {
-        Token operatorPlus = new Token();
-        operatorPlus.setImage("+");
-        operators.add(operatorPlus);
-
-        Token operatorLess = new Token();
-        operatorLess.setImage("-");
-        operators.add(operatorLess);
-
-        Token operatorX = new Token();
-        operatorX.setImage("*");
-        operators.add(operatorX);
-
-        Token operatorDivision = new Token();
-        operatorDivision.setImage("/");
-        operators.add(operatorDivision);
-
         setOperatorsClass();
     }
 

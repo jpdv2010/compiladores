@@ -7,6 +7,10 @@ public class Delimiter {
     private String representation;
     private String title = "Delimiter";
 
+    public Delimiter(String representation) {
+        this.representation = representation;
+    }
+
     public String getRepresentation() {
         return representation;
     }

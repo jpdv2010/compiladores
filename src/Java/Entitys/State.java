@@ -12,7 +12,6 @@ public class State {
     private boolean isFinal=false;
     private String id;
 
-
     public String getId() {
         return id;
     }

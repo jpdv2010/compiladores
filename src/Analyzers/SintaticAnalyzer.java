@@ -4,6 +4,7 @@ import Java.Entitys.Token;
 import Utils.Constants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,15 +15,12 @@ public class SintaticAnalyzer {
     private int ptoken;
     private Token[] tokenList;
     private Token token;
-
     private List<Error> errorLit;
 
     public SintaticAnalyzer(List<Token> tokenList)
     {
         ptoken = 0;
-
         getTokenList(tokenList);
-
         errorLit = new ArrayList<>();
         nexttoken();
         commands();
@@ -43,62 +41,73 @@ public class SintaticAnalyzer {
     }
 
     private void nexttoken() {
-        token = tokenList[++ptoken];
+        token = tokenList[ptoken++];
     }
 
     private void commands()
     {
-        decl();
         command();
+        if(token.getImage().equals("(")){
+            commands();
+        }
     }
 
     private void command()
     {
-        if(Objects.equals(token.getImage(), ";"))
-        {
-            decl();
-            atrib();
-            loop();
-            cond();
-            input();
-            output();
-            command();
+        if(token.getImage().equals("(")){
+            nexttoken();
+            if(Constants.Types.contains(token.getImage())){
+                decl();
+            } else {
+                switch (token.getImage()) {
+                    case "=":
+                        atrib();
+                        break;
+                    case "...":
+                        loop();
+                        break;
+                    case "?":
+                        cond();
+                        break;
+                    case ":<<":
+                        input();
+                        break;
+                    case ":>>":
+                        output();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else {
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '('"));
         }
     }
 
     private void decl()
     {
-        if(Objects.equals(token.getImage(), "("))
+        type();
+        ids();
+        if(Objects.equals(token.getImage(), ")"))
         {
             nexttoken();
             type();
-            ids();
-            if(Objects.equals(token.getImage(), ")"))
-            {
-                nexttoken();
-                type();
-            }
-            else
-            {
-                errorLit.add(new Error("erro: Esperado )"));
-            }
         }
         else
         {
-            errorLit.add(new Error("erro: Esperado ("));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado )"));
         }
     }
 
     private void type()
     {
-        if(Objects.equals(token.getImage(), "int") || Objects.equals(token.getImage(), "real") || Objects.equals(token.getImage(), "char") || Objects.equals(token.getImage(), "bool"))
+        if(Constants.Types.contains(token.getImage()))
         {
             nexttoken();
-            ids();
         }
         else
         {
-            errorLit.add(new Error("erro de declaração"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + "erro de declaração"));
         }
     }
 
@@ -112,7 +121,7 @@ public class SintaticAnalyzer {
         }
         else
         {
-            errorLit.add(new Error("erro: Esperado um identificador"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador"));
         }
     }
 
@@ -126,60 +135,147 @@ public class SintaticAnalyzer {
     }
 
     private void atrib() {
-        if(Objects.equals(token.getImage(),"(")){
+        if(Objects.equals(token.getImage(),"=")){
             nexttoken();
-            if(Objects.equals(token.getImage(),"=")){
+            if(Objects.equals(token.getTokenClass(),"Identifier")){
                 nexttoken();
-                if(Objects.equals(token.getTokenClass(),"id")){
+                exp();
+                if(Objects.equals(token.getImage(),")")){
                     nexttoken();
-                    exp();
-                    if(Objects.equals(token.getImage(),")")){
-                        nexttoken();
-                    } else {
-                        errorLit.add(new Error("erro: Esperado )"));
-                    }
                 } else {
-                    errorLit.add(new Error("erro: Esperado um identificador"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado )"));
                 }
             } else {
-                errorLit.add(new Error("erro: Esperado ="));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador"));
             }
         } else {
-            errorLit.add(new Error("erro: Esperado ("));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ="));
         }
     }
 
     private void exp() {
-        for(int i = 0; i < Constants.numbers.length; i++){
-            if(Constants.numbers[i].equals(token.getImage())){
-                operan();
-            } else {
-                if(token.getImage().equals("(")){
+        if(Constants.LiteralConstants.contains(token.getTokenClass())){
+            operan();
+        } else {
+            if(token.getImage().equals("(")){
+                nexttoken();
+                op();
+                exp();
+                exp();
+                if(token.getImage().equals(")")){
                     nexttoken();
-                    op();
-                    exp();
-                    exp();
-                    if(token.getImage().equals(")")){
-                        nexttoken();
-                        operan();
-                    } else {
-                        errorLit.add(new Error("Erro: Esperado )"));
-                    }
                 } else {
-                    errorLit.add(new Error("erro: Esperado ( ou operando"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado )"));
                 }
+            } else {
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ( ou operando"));
             }
         }
+    }
 
-
+    private void op() {
+        if(token.getTokenClass().equals("Operator")){
+            nexttoken();
+        } else {
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado Operador"));
+        }
     }
 
     private void operan() {
-        for(int i = 0; i < Constants.numbers.length; i++){
-            if(Constants.numbers[i].equals(token.getImage())){
+        if(Constants.LiteralConstants.contains(token.getTokenClass())){
+            nexttoken();
+        } else {
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: Constante literal"));
+        }
+    }
+
+    private void loop(){
+        if(token.getImage().equals("...")){
+            nexttoken();
+            exp();
+            commands();
+            if(token.getImage().equals(")")){
                 nexttoken();
-                if(Constants)
+            } else {
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
             }
+        } else{
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '...'"));
+        }
+    }
+
+    private void cond(){
+        if(token.getImage().equals("?")){
+            nexttoken();
+            exp();
+            if(token.getImage().equals("(")){
+                nexttoken();
+                commands();
+                if(token.getImage().equals(")")){
+                    nexttoken();
+                    elsel2s();
+                    if(token.getImage().equals(")")){
+                        nexttoken();
+                    } else {
+                        errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                    }
+                } else {
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                }
+            } else {
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+            }
+        } else {
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '?'"));
+        }
+    }
+
+    private void elsel2s() {
+        if(token.getImage().equals("(")){
+            nexttoken();
+            commands();
+            if(token.getImage().equals(")")){
+                nexttoken();
+            } else {
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+            }
+        }
+    }
+
+    private void input(){
+        if(token.getImage().equals(":<<")){
+            nexttoken();
+            if(token.getTokenClass().equals("Identifier")){
+                nexttoken();
+                if(token.getImage().equals(")")){
+                    nexttoken();
+                } else {
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                }
+            } else {
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador"));
+            }
+        } else {
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':<<'"));
+        }
+    }
+
+    private void output(){
+        if(token.getImage().equals("(")){
+            nexttoken();
+            if(token.getImage().equals(":>>")){
+                nexttoken();
+                exp();
+                if(token.getImage().equals(")")){
+                    nexttoken();
+                } else {
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                }
+            } else {
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':>>'"));
+            }
+        } else {
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '('"));
         }
     }
 

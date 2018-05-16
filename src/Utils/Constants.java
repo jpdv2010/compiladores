@@ -1,6 +1,7 @@
 package Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -15,4 +16,7 @@ public class Constants {
             "V","W","X","Y",
             "Z"};
     public static String[] numbers = {"0","1","2","3","4","5","6","7","8","9"};
+    public static List<String> LiteralConstants = Arrays.asList("CLI","CLS","CLR","CLL","Identifier");
+    public static List<String> Types = Arrays.asList("int","real","char","bool");
+
 }

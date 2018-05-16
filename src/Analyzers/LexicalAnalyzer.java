@@ -29,32 +29,35 @@ public class LexicalAnalyzer {
         this.authomats = authomatas;
     }
 
-    public boolean Analyze(){
-        code = verifyOnCLS(code.split(""));
-        //code = CommonUtils.clearCls(code, clsList);
-        String[] words = code.split(" ");
-        for(String word : words){
+    public Response Analyze(){
+        String[] lines = code.split("\n");
+        for(int i = 0; i< lines.length; i++){
+            code = verifyOnCLS(lines[i].split(""), i + 1);
+            //code = CommonUtils.clearCls(code, clsList);
+            String[] words = code.split(" ");
+            for(String word : words){
 
-            if(!AnalyzeWord(word)) return false;
+                if(!AnalyzeWord(word, i)) return new Response(false, "Erro Lexico Linha: " + i);
+            }
         }
-        return true;
+        return new Response(true,"");
     }
 
-    private boolean AnalyzeWord(String word) {
-        return verifyOnReserverWords(word)
-                || verifyOnDelimiters(word)
-                || verifyOnIdentifier(word)
-                || verifyOnOperators(word);
+    private boolean AnalyzeWord(String word, int line) {
+        return verifyOnReserverWords(word, line)
+                || verifyOnDelimiters(word, line)
+                || verifyOnIdentifier(word, line)
+                || verifyOnOperators(word, line);
     }
 
-    private boolean verifyOnDelimiters(String word)
+    private boolean verifyOnDelimiters(String word, int line)
     {
         DelimiterGen delimiterGen= new DelimiterGen();
         for(Delimiter delimiter : delimiterGen.getDelimiters())
         {
             if(delimiter.getRepresentation().equals(word))
             {
-                generateToken(word,"Delimiter");
+                generateToken(word,"Delimiter", line, 0);
                 lexem += " (" + word + ")Delimiter";
                 return true;
             }
@@ -62,14 +65,14 @@ public class LexicalAnalyzer {
         return false;
     }
 
-    private boolean verifyOnReserverWords(String word)
+    private boolean verifyOnReserverWords(String word, int line)
     {
         ReservedWordsGen reservedWordsGen= new ReservedWordsGen();
         for(Token reservedWord : reservedWordsGen.getReservedWords())
         {
             if(reservedWord.getImage().equals(word))
             {
-                generateToken(word,reservedWord.getTokenClass());
+                generateToken(word,reservedWord.getTokenClass(), line, 0);
                 lexem += " (" + word + ")ReservedWord";
                 return true;
             }
@@ -77,14 +80,14 @@ public class LexicalAnalyzer {
         return false;
     }
 
-    private boolean verifyOnOperators(String word)
+    private boolean verifyOnOperators(String word, int line)
     {
         OperatorsGen operatorsGen= new OperatorsGen();
         for(Token operator : operatorsGen.getOperators())
         {
             if(operator.getImage().equals(word))
             {
-                generateToken(word,operator.getTokenClass());
+                generateToken(word,operator.getTokenClass(), line, 0);
                 lexem += " (" + word + ")ReservedWord";
                 return true;
             }
@@ -92,7 +95,7 @@ public class LexicalAnalyzer {
         return false;
     }
 
-    private boolean verifyOnIdentifier(String word)
+    private boolean verifyOnIdentifier(String word, int line)
     {
         String token = "";
         for(PhiniteAuthomata authomata : authomats){
@@ -100,14 +103,14 @@ public class LexicalAnalyzer {
         }
         if(!token.equals(""))
         {
-            generateToken(word,"Identifier");
+            generateToken(word,"Identifier", line, 0);
             lexem += " (" + word + ")Identifier";
             return true;
         }
         return false;
     }
 
-    private String verifyOnCLS(String[] words) {
+    private String verifyOnCLS(String[] words, int line) {
         int aspasNum = 0;
         List<Char> charList = getCharList(words);
         String cls = "";
@@ -122,7 +125,7 @@ public class LexicalAnalyzer {
                 }else{
                     aspasNum --;
                     clsList.add(new Cls(cls));
-                    generateToken(cls,"CLS");
+                    generateToken(cls,"CLS", line, 0);
                     lexem += " (" + cls + ")CLS";
                 }
             }else{
@@ -132,7 +135,6 @@ public class LexicalAnalyzer {
                 }
             }
         }
-
         return mountsNewCode(charList);
     }
 
@@ -189,9 +191,8 @@ public class LexicalAnalyzer {
         return actualState.isFinal();
     }
 
-    private void generateToken(String word, String tokenClass) {
-        Token token = new Token();
-        token.setImage(word);
+    private void generateToken(String word, String tokenClass, int line, int column) {
+        Token token = new Token(word);
         if(Objects.equals(tokenClass,"Identifier"))
         {
             for(Identifier i : identifiers)
@@ -201,6 +202,8 @@ public class LexicalAnalyzer {
                     Identifier id = new Identifier();
                     id.setId(identifiers.size());
                     id.setImage(word);
+                    id.setLine(line);
+                    id.setColumn(column);
                     identifiers.add(id);
                     token.setIdentifierList(new ArrayList<>());
                     token.getIdentifierList().add(id.getId());
@@ -208,6 +211,8 @@ public class LexicalAnalyzer {
             }
         }
         token.setTokenClass(tokenClass);
+        token.setLine(line);
+        token.setColumn(column);
         tokenList.add(token);
     }
 

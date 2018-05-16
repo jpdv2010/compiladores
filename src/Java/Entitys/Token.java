@@ -12,6 +12,10 @@ public class Token {
     private int column;
     private String tokenClass;
 
+    public Token(String image) {
+        this.image = image;
+    }
+
     public String getImage() {
         return image;
     }
