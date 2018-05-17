@@ -17,16 +17,17 @@ import java.util.List;
  * Created by joaop on 05/09/2017.
  */
 public class TestPanel extends JFrame{
-    JEditorPane txtTransitionFunction = new JEditorPane();
-    JButton btnGenerateAuthomata = new JButton();
-    JButton btnOpenArchive = new JButton();
-    List<State> stateList=new ArrayList<State>();
+    private JEditorPane txtTransitionFunction = new JEditorPane();
+    private JButton btnGenerateAuthomata = new JButton();
+    private JButton btnOpenArchive = new JButton();
+    private List<State> stateList=new ArrayList<State>();
 
     public TestPanel(java.util.List<State> stateList){
         this.stateList=stateList;
         /*super("O que está escrito aqui nao importa, não vai aparecer!!");*/
         Container c = getContentPane();
         c.setLayout(new BorderLayout());
+        c.setBackground(Color.darkGray);
 
         btnGenerateAuthomata=new JButton("Validar Script L2S");
         btnGenerateAuthomata.addActionListener(pressGenerateAuthomata);
@@ -47,7 +48,7 @@ public class TestPanel extends JFrame{
         setLocationRelativeTo(null);
     }
 
-    ActionListener pressGenerateAuthomata= e -> {
+    private ActionListener pressGenerateAuthomata= e -> {
         List<PhiniteAuthomata> authomataList=new AuthomatGen().AuthomatGen();
         String code = txtTransitionFunction.getText();
         LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer(code, authomataList);
@@ -94,7 +95,7 @@ public class TestPanel extends JFrame{
         }
     };
 
-    ActionListener pressOpenArchive = e -> {
+    private ActionListener pressOpenArchive = e -> {
         JFileChooser file = new JFileChooser();
         file.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int i= file.showSaveDialog(null);

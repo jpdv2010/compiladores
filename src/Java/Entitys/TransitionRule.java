@@ -4,6 +4,11 @@ package Java.Entitys;
  * Created by joaop on 24/08/2017.
  */
 public class TransitionRule {
+    public TransitionRule(Letter letter, State nextState) {
+        this.letter = letter;
+        this.nextState = nextState;
+    }
+
     public Letter getLetter() {
         return letter;
     }

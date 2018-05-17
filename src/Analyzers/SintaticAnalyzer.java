@@ -26,7 +26,7 @@ public class SintaticAnalyzer {
         commands();
         if(!Objects.equals(token.getTokenClass(), "$"))
         {
-            errorLit.add(new Error("Esperado $"));
+            errorLit.add(new Error("Esperado $ - Encontrado: " + token.getImage()));
         }
     }
 
@@ -76,11 +76,12 @@ public class SintaticAnalyzer {
                         output();
                         break;
                     default:
+                        errorLit.add(new Error("Erro na linha: " + token.getLine() + "Esperado (atrib, loop, cond, input, output) - Encontrado: " + token.getImage()));
                         break;
                 }
             }
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '('"));
+            errorLit.add(new Error("Erro na linha: " + token.getLine() + " Esperado: '(' - Encontrado: " + token.getImage()));
         }
     }
 
@@ -91,11 +92,10 @@ public class SintaticAnalyzer {
         if(Objects.equals(token.getImage(), ")"))
         {
             nexttoken();
-            type();
         }
         else
         {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado )"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado  - Encontrado: " + token.getImage()));
         }
     }
 
@@ -107,13 +107,13 @@ public class SintaticAnalyzer {
         }
         else
         {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + "erro de declaração"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + "erro de declaração - Encontrado: " + token.getImage()));
         }
     }
 
     private void ids()
     {
-        if(Objects.equals(token.getTokenClass(), "id"))
+        if(Objects.equals(token.getTokenClass(), "Identifier"))
         {
             nexttoken();
             ids2();
@@ -121,13 +121,13 @@ public class SintaticAnalyzer {
         }
         else
         {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador - Encontrado: " + token.getImage()));
         }
     }
 
     private void ids2()
     {
-        if(Objects.equals(token.getTokenClass(), "id"))
+        if(Objects.equals(token.getTokenClass(), "Identifier"))
         {
             nexttoken();
             ids2();
@@ -143,13 +143,13 @@ public class SintaticAnalyzer {
                 if(Objects.equals(token.getImage(),")")){
                     nexttoken();
                 } else {
-                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado )"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ) - Encontrado: " + token.getImage()));
                 }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador - Encontrado: " + token.getImage()));
             }
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ="));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado = - Encontrado: " + token.getImage()));
         }
     }
 
@@ -165,10 +165,10 @@ public class SintaticAnalyzer {
                 if(token.getImage().equals(")")){
                     nexttoken();
                 } else {
-                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado )"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ) - Encontrado: " + token.getImage()));
                 }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ( ou operando"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ( ou operando - Encontrado: " + token.getImage()));
             }
         }
     }
@@ -177,7 +177,7 @@ public class SintaticAnalyzer {
         if(token.getTokenClass().equals("Operator")){
             nexttoken();
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado Operador"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado Operador - Encontrado: " + token.getImage()));
         }
     }
 
@@ -185,7 +185,7 @@ public class SintaticAnalyzer {
         if(Constants.LiteralConstants.contains(token.getTokenClass())){
             nexttoken();
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: Constante literal"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: Constante literal - Encontrado: " + token.getImage()));
         }
     }
 
@@ -197,10 +197,10 @@ public class SintaticAnalyzer {
             if(token.getImage().equals(")")){
                 nexttoken();
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
             }
         } else{
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '...'"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '...' - Encontrado: " + token.getImage()));
         }
     }
 
@@ -217,16 +217,16 @@ public class SintaticAnalyzer {
                     if(token.getImage().equals(")")){
                         nexttoken();
                     } else {
-                        errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                        errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
                     }
                 } else {
-                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
                 }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
             }
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '?'"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '?' - Encontrado: " + token.getImage()));
         }
     }
 
@@ -237,7 +237,7 @@ public class SintaticAnalyzer {
             if(token.getImage().equals(")")){
                 nexttoken();
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
             }
         }
     }
@@ -250,13 +250,13 @@ public class SintaticAnalyzer {
                 if(token.getImage().equals(")")){
                     nexttoken();
                 } else {
-                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
                 }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador - Encontrado: " + token.getImage()));
             }
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':<<'"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':<<' - Encontrado: " + token.getImage()));
         }
     }
 
@@ -269,13 +269,13 @@ public class SintaticAnalyzer {
                 if(token.getImage().equals(")")){
                     nexttoken();
                 } else {
-                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')'"));
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
                 }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':>>'"));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':>>' - Encontrado: " + token.getImage()));
             }
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '('"));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '(' - Encontrado: " + token.getImage()));
         }
     }
 

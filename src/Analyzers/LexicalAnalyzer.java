@@ -6,6 +6,7 @@ import Managers.OperatorsGen;
 import Managers.ReservedWordsGen;
 import Utils.Char;
 import Utils.CommonUtils;
+import javafx.scene.control.skin.LabeledSkinBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,6 @@ public class LexicalAnalyzer {
 
     private List<Cls> clsList = new ArrayList<>();
     private List<Token> tokenList = new ArrayList<>();
-
     private List<Identifier> identifiers = new ArrayList<>();
 
     public LexicalAnalyzer(String code, List<PhiniteAuthomata> authomatas){
@@ -125,7 +125,6 @@ public class LexicalAnalyzer {
                 }else{
                     aspasNum --;
                     clsList.add(new Cls(cls));
-                    generateToken(cls,"CLS", line, 0);
                     lexem += " (" + cls + ")CLS";
                 }
             }else{

@@ -19,7 +19,7 @@ public class PhiniteAuthomata {
         this.title = title;
     }
 
-    public List<State> generateAuthomatha(BufferedReader reader) throws IOException {
+   // public List<State> generateAuthomatha(BufferedReader reader) throws IOException {
         /*int index=0;
         while(index<5){
             List<Letter> letterList=new ArrayList<>();
@@ -90,9 +90,9 @@ public class PhiniteAuthomata {
             index++;
         }
 */
-        AuthomatGen authomatGen = new AuthomatGen();
-        return authomatGen.ifAuthomat();
-    }
+        //AuthomatGen authomatGen = new AuthomatGen();
+        //return authomatGen.ifAuthomat();
+   // }
 
     public String getTitle() {
         return title;
