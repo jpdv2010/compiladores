@@ -1,13 +1,13 @@
 package Views;
 
 import Analyzers.LexicalAnalyzer;
+import Analyzers.SemanticAnalyzer;
 import Analyzers.SintaticAnalyzer;
 import Java.Entitys.*;
 import Managers.AuthomatGen;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.*;
@@ -30,7 +30,7 @@ public class TestPanel extends JFrame{
         c.setBackground(Color.darkGray);
 
         btnGenerateAuthomata=new JButton("Validar Script L2S");
-        btnGenerateAuthomata.addActionListener(pressGenerateAuthomata);
+        btnGenerateAuthomata.addActionListener(analyze);
         c.add(btnGenerateAuthomata,BorderLayout.NORTH);
 
         btnOpenArchive = new JButton("Carregar script");
@@ -39,7 +39,10 @@ public class TestPanel extends JFrame{
         c.add(btnOpenArchive, BorderLayout.SOUTH);
 
         txtTransitionFunction=new JEditorPane();
-        txtTransitionFunction.setText("Bem vindo!");
+        txtTransitionFunction.setText("( int m fat i ) ( real r1 )\n" +
+                "( :>> \"Entre o valor n:\" )\n" +
+                "( :<< n )\n" +
+                "( ? ( < n 0 ) ( ( :>> \"Valor Invalido\" ) ) ( ( = fat 1 ) ( = i 1 ) ( ... ( <= i n ) ( = fat ( * fat i ) ) ( = i ( + i 1 ) ) ) ) ( string res ) ( = res ( & \"fat : \" fat ) ) ( :>> res ) )");
         this.add(txtTransitionFunction);
 
         setSize(1366,780);
@@ -48,13 +51,14 @@ public class TestPanel extends JFrame{
         setLocationRelativeTo(null);
     }
 
-    private ActionListener pressGenerateAuthomata= e -> {
+    private ActionListener analyze = e -> {
         List<PhiniteAuthomata> authomataList=new AuthomatGen().AuthomatGen();
         String code = txtTransitionFunction.getText();
         LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer(code, authomataList);
         Response response = lexicalAnalyzer.Analyze();
         String lexem = lexicalAnalyzer.getLexem();
         List<Token> tokenList = lexicalAnalyzer.getTokenList();
+        List<Identifier> identifierList = lexicalAnalyzer.getIdentifiers();
         Token token = new Token("$");
         token.setTokenClass("$");
         if(tokenList.size() > 1){
@@ -65,12 +69,14 @@ public class TestPanel extends JFrame{
         tokenList.add(token);
         SintaticAnalyzer sintaticAnalyzer = new SintaticAnalyzer(tokenList);
         List<Error> errors = sintaticAnalyzer.getErrorLit();
-
-
+        Node root = sintaticAnalyzer.getRoot();
+        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(root, identifierList);
+        String saida = semanticAnalyzer.toString();
         if(response.isCorrect() && errors.size() == 0){
             String[] options = {"Ok"};
+            writeCFile(saida);
             JOptionPane.showOptionDialog(null,
-                    lexem,
+                    "Codigo aceito pelo compilador L2S",
                     "Aprovado!!",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.INFORMATION_MESSAGE,
@@ -94,6 +100,18 @@ public class TestPanel extends JFrame{
                     options[0]);
         }
     };
+
+    private void writeCFile(String saida) {
+        File file = new File("l2s.txt");
+        try {
+            file.createNewFile();
+            PrintWriter writer = new PrintWriter("C:/Users/Neppo/Documents/Comp/" + file.getName(),"UTF-8");
+            writer.print(saida);
+            writer.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+    }
 
     private ActionListener pressOpenArchive = e -> {
         JFileChooser file = new JFileChooser();

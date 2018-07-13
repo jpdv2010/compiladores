@@ -15,8 +15,9 @@ public class Constants {
             "R","S","T","U",
             "V","W","X","Y",
             "Z"};
-    public static String[] numbers = {"0","1","2","3","4","5","6","7","8","9"};
+    public static List<String> numbers = Arrays.asList("0","1","2","3","4","5","6","7","8","9");
     public static List<String> LiteralConstants = Arrays.asList("CLI","CLS","CLR","CLL","Identifier");
-    public static List<String> Types = Arrays.asList("int","real","char","bool");
+    public static List<String> Operators = Arrays.asList("+","-","/","&","*");
+    public static List<String> Types = Arrays.asList("int","real","char","bool","string");
 
 }

@@ -20,6 +20,7 @@ public class ReservedWordsGen {
             ,new Token("=")
             ,new Token("bool")
             ,new Token("char")
+            ,new Token("string")
             ,new Token("...")
     );
     public ReservedWordsGen() {

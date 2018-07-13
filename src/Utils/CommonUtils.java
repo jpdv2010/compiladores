@@ -10,9 +10,7 @@ import java.util.Objects;
  */
 public class CommonUtils {
     public static boolean isNumber(String symbol){
-        for(int i = 0; i < Constants.numbers.length; i++){
-            if(Constants.numbers[i].equals(symbol)) return true;
-        }
+        if(Constants.numbers.contains(symbol)) return true;
         return false;
     }
 

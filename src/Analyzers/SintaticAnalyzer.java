@@ -1,5 +1,6 @@
 package Analyzers;
 
+import Java.Entitys.Node;
 import Java.Entitys.Token;
 import Utils.Constants;
 
@@ -16,6 +17,7 @@ public class SintaticAnalyzer {
     private Token[] tokenList;
     private Token token;
     private List<Error> errorLit;
+    private Node root;
 
     public SintaticAnalyzer(List<Token> tokenList)
     {
@@ -23,11 +25,17 @@ public class SintaticAnalyzer {
         getTokenList(tokenList);
         errorLit = new ArrayList<>();
         nexttoken();
-        commands();
+        this.root = this.command();
+        this.root.addFilho(commands());
         if(!Objects.equals(token.getTokenClass(), "$"))
         {
             errorLit.add(new Error("Esperado $ - Encontrado: " + token.getImage()));
         }
+        for(Token t : tokenList){
+            System.out.println(t.toString());
+        }
+        mostraArvore();
+
     }
 
     private void getTokenList(List<Token> tokenList) {
@@ -44,36 +52,40 @@ public class SintaticAnalyzer {
         token = tokenList[ptoken++];
     }
 
-    private void commands()
+    private Node commands()
     {
-        command();
+        Node node = new Node("commands");
+        node.addFilho(command());
         if(token.getImage().equals("(")){
-            commands();
+            node.addFilho(commands());
         }
+        return node;
     }
 
-    private void command()
+    private Node command()
     {
+        Node node = new Node("command");
         if(token.getImage().equals("(")){
+            node.addFilho(new Node(token));
             nexttoken();
             if(Constants.Types.contains(token.getImage())){
-                decl();
+                node.addFilho(decl());
             } else {
                 switch (token.getImage()) {
                     case "=":
-                        atrib();
+                        node.addFilho(atrib());
                         break;
                     case "...":
-                        loop();
+                        node.addFilho(loop());
                         break;
                     case "?":
-                        cond();
+                        node.addFilho(cond());
                         break;
                     case ":<<":
-                        input();
+                        node.addFilho(input());
                         break;
                     case ":>>":
-                        output();
+                        node.addFilho(output());
                         break;
                     default:
                         errorLit.add(new Error("Erro na linha: " + token.getLine() + "Esperado (atrib, loop, cond, input, output) - Encontrado: " + token.getImage()));
@@ -83,64 +95,85 @@ public class SintaticAnalyzer {
         } else {
             errorLit.add(new Error("Erro na linha: " + token.getLine() + " Esperado: '(' - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void decl()
+    private Node decl()
     {
-        type();
-        ids();
+        Node node = new Node("decl");
+        node.addFilho(type());
+        node.addFilho(ids());
         if(Objects.equals(token.getImage(), ")"))
         {
+            node.addFilho(new Node(token));
             nexttoken();
         }
         else
         {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado  - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void type()
+    private Node type()
     {
+        Node node = new Node("type");
         if(Constants.Types.contains(token.getImage()))
         {
+            node.addFilho(new Node(token));
             nexttoken();
         }
         else
         {
             errorLit.add(new Error("Erro linha: " + token.getLine() + "erro de declaração - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void ids()
+    private Node ids()
     {
+        Node node = new Node("ids");
         if(Objects.equals(token.getTokenClass(), "Identifier"))
         {
+            node.addFilho(new Node(token));
             nexttoken();
-            ids2();
-
+            node.addFilho(ids2());
         }
         else
         {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado um identificador - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void ids2()
+    private Node ids2()
     {
+        Node node = new Node("ids2");
         if(Objects.equals(token.getTokenClass(), "Identifier"))
         {
+            node.addFilho(new Node(token));
             nexttoken();
-            ids2();
+             node.addFilho(ids2());
         }
+        return node;
     }
 
-    private void atrib() {
+    private Node atrib() {
+        Node node = new Node("atrib");
         if(Objects.equals(token.getImage(),"=")){
+            node.addFilho(new Node(token));
             nexttoken();
             if(Objects.equals(token.getTokenClass(),"Identifier")){
+                node.addFilho(new Node(token));
                 nexttoken();
-                exp();
+                if(token.getImage().equals("(")){
+                    node.addFilho(exp());
+                } else {
+                    node.addFilho(operan());
+                }
+
                 if(Objects.equals(token.getImage(),")")){
+                    node.addFilho(new Node(token));
                     nexttoken();
                 } else {
                     errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ) - Encontrado: " + token.getImage()));
@@ -151,17 +184,20 @@ public class SintaticAnalyzer {
         } else {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado = - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void exp() {
+    private Node exp() {
+        Node node = new Node("exp");
         if(Constants.LiteralConstants.contains(token.getTokenClass())){
-            operan();
+            node.addFilho(operan());
         } else {
             if(token.getImage().equals("(")){
+                node.addFilho(new Node(token));
                 nexttoken();
-                op();
-                exp();
-                exp();
+                node.addFilho(op());
+                node.addFilho(exp());
+                node.addFilho(exp());
                 if(token.getImage().equals(")")){
                     nexttoken();
                 } else {
@@ -171,30 +207,40 @@ public class SintaticAnalyzer {
                 errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ( ou operando - Encontrado: " + token.getImage()));
             }
         }
+        return node;
     }
 
-    private void op() {
+    private Node op() {
+        Node node = new Node("op");
         if(token.getTokenClass().equals("Operator")){
+            node.addFilho(new Node(token));
             nexttoken();
         } else {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado Operador - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void operan() {
+    private Node operan() {
+        Node node = new Node("operan");
         if(Constants.LiteralConstants.contains(token.getTokenClass())){
+            node.addFilho(new Node(token));
             nexttoken();
         } else {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: Constante literal - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void loop(){
+    private Node loop(){
+        Node node = new Node("loop");
         if(token.getImage().equals("...")){
+            node.addFilho(new Node(token));
             nexttoken();
-            exp();
-            commands();
+            node.addFilho(exp());
+            node.addFilho(commands());
             if(token.getImage().equals(")")){
+                node.addFilho(new Node(token));
                 nexttoken();
             } else {
                 errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
@@ -202,19 +248,25 @@ public class SintaticAnalyzer {
         } else{
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '...' - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void cond(){
+    private Node cond(){
+        Node node = new Node("cond");
         if(token.getImage().equals("?")){
+            node.addFilho(new Node(token));
             nexttoken();
-            exp();
+            node.addFilho(exp());
             if(token.getImage().equals("(")){
+                node.addFilho(new Node(token));
                 nexttoken();
-                commands();
+                node.addFilho(commands());
                 if(token.getImage().equals(")")){
+                    node.addFilho(new Node(token));
                     nexttoken();
-                    elsel2s();
+                    node.addFilho(elsel2s());
                     if(token.getImage().equals(")")){
+                        node.addFilho(new Node(token));
                         nexttoken();
                     } else {
                         errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
@@ -228,26 +280,35 @@ public class SintaticAnalyzer {
         } else {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '?' - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void elsel2s() {
+    private Node elsel2s() {
+        Node node = new Node("elsel2s");
         if(token.getImage().equals("(")){
+            node.addFilho(new Node(token));
             nexttoken();
-            commands();
+            node.addFilho(commands());
             if(token.getImage().equals(")")){
+                node.addFilho(new Node(token));
                 nexttoken();
             } else {
                 errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
             }
         }
+        return node;
     }
 
-    private void input(){
+    private Node input(){
+        Node node = new Node("input");
         if(token.getImage().equals(":<<")){
+            node.addFilho(new Node(token));
             nexttoken();
             if(token.getTokenClass().equals("Identifier")){
+                node.addFilho(new Node(token));
                 nexttoken();
                 if(token.getImage().equals(")")){
+                    node.addFilho(new Node(token));
                     nexttoken();
                 } else {
                     errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
@@ -258,24 +319,35 @@ public class SintaticAnalyzer {
         } else {
             errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':<<' - Encontrado: " + token.getImage()));
         }
+        return node;
     }
 
-    private void output(){
-        if(token.getImage().equals("(")){
+    private Node output(){
+        Node node = new Node("output");
+        if(token.getImage().equals(":>>")){
+            node.addFilho(new Node(token));
             nexttoken();
-            if(token.getImage().equals(":>>")){
+            node.addFilho(exp());
+            if(token.getImage().equals(")")){
+                node.addFilho(new Node(token));
                 nexttoken();
-                exp();
-                if(token.getImage().equals(")")){
-                    nexttoken();
-                } else {
-                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
-                }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':>>' - Encontrado: " + token.getImage()));
+                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
             }
         } else {
-            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: '(' - Encontrado: " + token.getImage()));
+            errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado ':>>' - Encontrado: " + token.getImage()));
+        }
+    return node;
+    }
+
+    public void mostraArvore() {
+        mostraNo(root, "   ");
+    }
+
+    private void mostraNo(Node no, String espaco){
+        System.out.println(espaco + no);
+        for(Node filho: no.filhos) {
+            mostraNo(filho, espaco + "   ");
         }
     }
 
@@ -285,5 +357,9 @@ public class SintaticAnalyzer {
 
     public void setErrorLit(List<Error> errorLit) {
         this.errorLit = errorLit;
+    }
+
+    public Node getRoot() {
+        return root;
     }
 }

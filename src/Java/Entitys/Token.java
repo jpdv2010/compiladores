@@ -55,4 +55,15 @@ public class Token {
     public void setTokenClass(String tokenClass) {
         this.tokenClass = tokenClass;
     }
+
+    @Override
+    public String toString() {
+        return "Token{" +
+                "image='" + image + '\'' +
+                ", identifierList=" + identifierList +
+                ", line=" + line +
+                ", column=" + column +
+                ", tokenClass='" + tokenClass + '\'' +
+                '}';
+    }
 }

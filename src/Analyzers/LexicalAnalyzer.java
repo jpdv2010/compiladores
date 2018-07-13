@@ -6,7 +6,7 @@ import Managers.OperatorsGen;
 import Managers.ReservedWordsGen;
 import Utils.Char;
 import Utils.CommonUtils;
-import javafx.scene.control.skin.LabeledSkinBase;
+import Utils.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,22 +32,58 @@ public class LexicalAnalyzer {
     public Response Analyze(){
         String[] lines = code.split("\n");
         for(int i = 0; i< lines.length; i++){
-            code = verifyOnCLS(lines[i].split(""), i + 1);
-            //code = CommonUtils.clearCls(code, clsList);
-            String[] words = code.split(" ");
-            for(String word : words){
-
-                if(!AnalyzeWord(word, i)) return new Response(false, "Erro Lexico Linha: " + i);
-            }
+            Response resp = AnalyzeLine(lines[i], i + 1);
+            if(!resp.isCorrect()) return resp;
         }
         return new Response(true,"");
+    }
+
+    private Response AnalyzeLine(String lineData, int lineNumber){
+        String[] words = lineData.split(" ");
+        int i = 0;
+        for(String word : words){
+            if(word.split("")[0].equals("\"")){//CASO ENCONTRE ASPAS DUPLAS ELE VERIFICA SE TRATA-SE DE UMA CLS
+                String newWords = getNewWords(lineData.split(" "), i);
+                String newLine = verifyOnCLS(newWords.split(""), lineNumber);
+                Response resp = AnalyzeLine(newLine, lineNumber);
+                return resp.isCorrect()? new Response(true,"")
+                : new Response(false,"Erro Lexico Linha: " + lineNumber);
+            } else {                                    //VERIFICA TODOS OS OUTROS CASOS
+                if(!word.equals("") && !word.equals(" ")){
+                    if(!AnalyzeWord(word, lineNumber)) return new Response(false, "Erro Lexico Linha: " + lineNumber);
+                }
+            }
+            i++;
+        }
+        return new Response(true,"");
+    }
+
+    private String getNewWords(String[] words, int i) {
+        String nw = "";
+        for(int j = 0; j < words.length; j++){
+            if(j >= i) nw += words[j] + " ";
+        }
+        return nw;
     }
 
     private boolean AnalyzeWord(String word, int line) {
         return verifyOnReserverWords(word, line)
                 || verifyOnDelimiters(word, line)
                 || verifyOnIdentifier(word, line)
-                || verifyOnOperators(word, line);
+                || verifyOnOperators(word, line)
+                || verifyOnCli(word, line);
+    }
+
+    private boolean verifyOnCli(String word, int line) {
+        String[] chars = word.split("");
+        for(String ch : chars){
+            if(!Constants.numbers.contains(ch)){
+                return false;
+            }
+        }
+        generateToken(word, "CLI", line, 0);
+        lexem += "(" + word + ")CLI";
+        return true;
     }
 
     private boolean verifyOnDelimiters(String word, int line)
@@ -124,6 +160,7 @@ public class LexicalAnalyzer {
                     aspasNum ++;
                 }else{
                     aspasNum --;
+                    generateToken(cls, "CLS", line, 1);
                     clsList.add(new Cls(cls));
                     lexem += " (" + cls + ")CLS";
                 }
@@ -194,19 +231,15 @@ public class LexicalAnalyzer {
         Token token = new Token(word);
         if(Objects.equals(tokenClass,"Identifier"))
         {
+            boolean exists = false;
             for(Identifier i : identifiers)
             {
-                if(!Objects.equals(i,tokenClass))
-                {
-                    Identifier id = new Identifier();
-                    id.setId(identifiers.size());
-                    id.setImage(word);
-                    id.setLine(line);
-                    id.setColumn(column);
-                    identifiers.add(id);
-                    token.setIdentifierList(new ArrayList<>());
-                    token.getIdentifierList().add(id.getId());
-                }
+                if(i.getImage().equals(word)) exists = true;
+            }
+            if(!exists){
+                identifiers.add(new Identifier(identifiers.size(),word,line,column));
+                token.setIdentifierList(new ArrayList<>());
+                token.getIdentifierList().add(identifiers.size());
             }
         }
         token.setTokenClass(tokenClass);
