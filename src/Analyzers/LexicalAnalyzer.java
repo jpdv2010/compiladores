@@ -30,12 +30,17 @@ public class LexicalAnalyzer {
     }
 
     public Response Analyze(){
-        String[] lines = code.split("\n");
-        for(int i = 0; i< lines.length; i++){
-            Response resp = AnalyzeLine(lines[i], i + 1);
-            if(!resp.isCorrect()) return resp;
+        try {
+            String[] lines = code.split("\n");
+            for(int i = 0; i< lines.length; i++){
+                Response resp = AnalyzeLine(lines[i], i + 1);
+                if(!resp.isCorrect()) return resp;
+            }
+            return new Response(true,"");
+        } catch (Exception ex){
+            return new Response(false, "Erro léxico: " + ex.getMessage());
         }
-        return new Response(true,"");
+
     }
 
     private Response AnalyzeLine(String lineData, int lineNumber){
@@ -47,7 +52,7 @@ public class LexicalAnalyzer {
                 String newLine = verifyOnCLS(newWords.split(""), lineNumber);
                 Response resp = AnalyzeLine(newLine, lineNumber);
                 return resp.isCorrect()? new Response(true,"")
-                : new Response(false,"Erro Lexico Linha: " + lineNumber);
+                        : new Response(false,"Erro Lexico Linha: " + lineNumber);
             } else {                                    //VERIFICA TODOS OS OUTROS CASOS
                 if(!word.equals("") && !word.equals(" ")){
                     if(!AnalyzeWord(word, lineNumber)) return new Response(false, "Erro Lexico Linha: " + lineNumber);

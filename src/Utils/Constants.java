@@ -20,4 +20,15 @@ public class Constants {
     public static List<String> Operators = Arrays.asList("+","-","/","&","*");
     public static List<String> Types = Arrays.asList("int","real","char","bool","string");
 
+    public static String PLACEHOLD_CODE = "( int a b c x y z )\n" +
+            "( :>> \"entre com o valor de x:\")\n" +
+            "( :<< x )\n" +
+            "( = z ( * x y ) )\n" +
+            "( = c ( + a b ) )\n" +
+            "( ... ( <= a b ) ( = z ( * x y ) ) )\n" +
+            "( ? ( <= a b ) ( :>> \"Valor Invalido\" ) )\n" +
+            "( ... ( <= a b ) \n" +
+            "( ... ( <= a b ) \n" +
+            "( = z ( * x y ) ) ) )";
+
 }

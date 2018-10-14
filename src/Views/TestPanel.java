@@ -5,6 +5,7 @@ import Analyzers.SemanticAnalyzer;
 import Analyzers.SintaticAnalyzer;
 import Java.Entitys.*;
 import Managers.AuthomatGen;
+import Utils.Constants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,6 +22,11 @@ public class TestPanel extends JFrame{
     private JButton btnGenerateAuthomata = new JButton();
     private JButton btnOpenArchive = new JButton();
     private List<State> stateList=new ArrayList<State>();
+
+    private List<Token> tokenList;
+    private List<Identifier> identifierList;
+
+    private List<Error> errors;
 
     public TestPanel(java.util.List<State> stateList){
         this.stateList=stateList;
@@ -39,10 +45,7 @@ public class TestPanel extends JFrame{
         c.add(btnOpenArchive, BorderLayout.SOUTH);
 
         txtTransitionFunction=new JEditorPane();
-        txtTransitionFunction.setText("( int m fat i ) ( real r1 )\n" +
-                "( :>> \"Entre o valor n:\" )\n" +
-                "( :<< n )\n" +
-                "( ? ( < n 0 ) ( ( :>> \"Valor Invalido\" ) ) ( ( = fat 1 ) ( = i 1 ) ( ... ( <= i n ) ( = fat ( * fat i ) ) ( = i ( + i 1 ) ) ) ) ( string res ) ( = res ( & \"fat : \" fat ) ) ( :>> res ) )");
+        txtTransitionFunction.setText(Constants.PLACEHOLD_CODE);
         this.add(txtTransitionFunction);
 
         setSize(1366,780);
@@ -52,54 +55,83 @@ public class TestPanel extends JFrame{
     }
 
     private ActionListener analyze = e -> {
+        Response response = lexicalAnalyze();
+        Node root = sintaticAnalyze();
+        String output = semanticAnalyze(root);
+        if(response.isCorrect() && this.errors.size() == 0){
+            writeCFile(output);
+            showOkDialog();
+        }
+        else
+        {
+            showErrorDialog(response, this.errors);
+        }
+    };
+
+    private String semanticAnalyze(Node root) {
+        SemanticAnalyzer semanticAnalyzer = null;
+        Error error;
+        String output = "";
+        try {
+            semanticAnalyzer = new SemanticAnalyzer(root, identifierList);
+            return semanticAnalyzer.toString();
+        } catch (Exception e1) {
+            error = new Error(e1.getMessage());
+            this.errors.add(error);
+            return "";
+        }
+    }
+
+    private Node sintaticAnalyze() {
+        SintaticAnalyzer sintaticAnalyzer = new SintaticAnalyzer(this.tokenList);
+        this.errors = sintaticAnalyzer.getErrorLit();
+        return sintaticAnalyzer.getRoot();
+    }
+
+    private Response lexicalAnalyze() {
         List<PhiniteAuthomata> authomataList=new AuthomatGen().AuthomatGen();
         String code = txtTransitionFunction.getText();
         LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer(code, authomataList);
         Response response = lexicalAnalyzer.Analyze();
-        String lexem = lexicalAnalyzer.getLexem();
-        List<Token> tokenList = lexicalAnalyzer.getTokenList();
-        List<Identifier> identifierList = lexicalAnalyzer.getIdentifiers();
+        this.tokenList = lexicalAnalyzer.getTokenList();
+        this.identifierList = lexicalAnalyzer.getIdentifiers();
         Token token = new Token("$");
         token.setTokenClass("$");
-        if(tokenList.size() > 1){
-            token.setLine(tokenList.get(tokenList.size()-1).getLine() + 1);
+        if(this.tokenList.size() > 1){
+            token.setLine(this.tokenList.get(this.tokenList.size()-1).getLine() + 1);
         } else {
             token.setLine(1);
         }
-        tokenList.add(token);
-        SintaticAnalyzer sintaticAnalyzer = new SintaticAnalyzer(tokenList);
-        List<Error> errors = sintaticAnalyzer.getErrorLit();
-        Node root = sintaticAnalyzer.getRoot();
-        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(root, identifierList);
-        String saida = semanticAnalyzer.toString();
-        if(response.isCorrect() && errors.size() == 0){
-            String[] options = {"Ok"};
-            writeCFile(saida);
-            JOptionPane.showOptionDialog(null,
-                    "Codigo aceito pelo compilador L2S",
-                    "Aprovado!!",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-        }
-        else
-        {
-            String message = "";
-            if(!response.isCorrect()) message += response.getError();
-            if(errors.size() > 0) message += "1 ou mais erro(s) sintático(s): " + errors.get(0).getMessage();
-            String[] options = {"Ok"};
-            JOptionPane.showOptionDialog(null,
-                    "Erro: " + message,
-                    "Nao Aprovado!!",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-        }
-    };
+        this.tokenList.add(token);
+        return response;
+    }
+
+    private void showErrorDialog(Response response, List<Error> errors) {
+        String message = "";
+        if(!response.isCorrect()) message += response.getError();
+        if(errors.size() > 0) message += "1 ou mais erro(s) sintático(s): " + errors.get(0).getMessage();
+        String[] options = {"Ok"};
+        JOptionPane.showOptionDialog(null,
+                "Erro: " + message,
+                "Nao Aprovado!!",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+    }
+
+    private void showOkDialog() {
+        String[] options = {"Ok"};
+        JOptionPane.showOptionDialog(null,
+                "Codigo aceito pelo compilador L2S",
+                "Aprovado!!",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+    }
 
     private void writeCFile(String saida) {
         File file = new File("l2s.txt");
@@ -123,18 +155,15 @@ public class TestPanel extends JFrame{
             File arquivo = file.getSelectedFile();
             String caminho=arquivo.getPath();
             BufferedReader reader;
-            List<PhiniteAuthomata> authomataList = new AuthomatGen().AuthomatGen();
             try {
                 reader = new BufferedReader(new FileReader(caminho));
                 String line = reader.readLine();
-                String code = "";
+                StringBuilder code = new StringBuilder();
                 while (line != null){
-                    code += line + "\n";
+                    code.append(line).append("\n");
                     line = reader.readLine();
                 }
-                txtTransitionFunction.setText(code);
-            } catch (FileNotFoundException e1) {
-                e1.printStackTrace();
+                txtTransitionFunction.setText(code.toString());
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

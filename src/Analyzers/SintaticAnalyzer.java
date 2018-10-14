@@ -51,7 +51,7 @@ public class SintaticAnalyzer {
     private void nexttoken() {
         token = tokenList[ptoken++];
     }
-
+    private void prevtoken(){token = tokenList[ptoken--];}
     private Node commands()
     {
         Node node = new Node("commands");
@@ -258,19 +258,14 @@ public class SintaticAnalyzer {
             nexttoken();
             node.addFilho(exp());
             if(token.getImage().equals("(")){
-                node.addFilho(new Node(token));
-                nexttoken();
+               // node.addFilho(new Node(token));
+               // nexttoken();
                 node.addFilho(commands());
+                if(token.getImage().equals("("))
+                    node.addFilho(commands());
                 if(token.getImage().equals(")")){
                     node.addFilho(new Node(token));
                     nexttoken();
-                    node.addFilho(elsel2s());
-                    if(token.getImage().equals(")")){
-                        node.addFilho(new Node(token));
-                        nexttoken();
-                    } else {
-                        errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
-                    }
                 } else {
                     errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
                 }
@@ -288,12 +283,16 @@ public class SintaticAnalyzer {
         if(token.getImage().equals("(")){
             node.addFilho(new Node(token));
             nexttoken();
-            node.addFilho(commands());
-            if(token.getImage().equals(")")){
-                node.addFilho(new Node(token));
-                nexttoken();
+            if(token.getImage().equals("(")){
+                node.addFilho(commands());
+                if(token.getImage().equals(")")){
+                    node.addFilho(new Node(token));
+                    nexttoken();
+                } else {
+                    errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
+                }
             } else {
-                errorLit.add(new Error("Erro linha: " + token.getLine() + " Esperado: ')' - Encontrado: " + token.getImage()));
+                return null;
             }
         }
         return node;

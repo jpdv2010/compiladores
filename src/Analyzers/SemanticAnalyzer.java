@@ -18,11 +18,15 @@ public class SemanticAnalyzer {
         return out;
     }
 
-    public SemanticAnalyzer(Node root, List<Identifier> identifierList) {
-        this.root = root;
-        this.identifierList = identifierList;
-        this.out = command(root);
-        this.out += commands(root.getFilho(2));
+    public SemanticAnalyzer(Node root, List<Identifier> identifierList) throws Exception {
+        try{
+            this.root = root;
+            this.identifierList = identifierList;
+            this.out = command(root);
+            this.out += commands(root.getFilho(2));
+        } catch (Exception ex){
+            throw new Exception(ex.getMessage());
+        }
     }
 
     private String commands(Node node){
@@ -107,11 +111,11 @@ public class SemanticAnalyzer {
         }
         cond += "{";
         if(node.filhos.size() > 3){
-            cond += commands(node.getFilho(3));
+            cond += commands(node.getFilho(2));
         }
         cond += "}";
         if(node.filhos.size() > 4){
-            cond += elsel2s(node.getFilho(4));
+            cond += elsel2s(node.getFilho(3));
         }
         return cond;
     }
